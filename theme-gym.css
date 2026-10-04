@@ -1,0 +1,163 @@
+/* Тема «Gym»: світла, мінімалістична, спортивна.
+   Тепле «паперове» тло, щільна графіка, вузький заголовний шрифт,
+   лаймовий акцент із чорним текстом, гострі кути, лінії замість тіней.
+   Вмикається атрибутом data-theme="gym" на <html>. */
+
+html[data-theme="gym"] {
+  --bg: #f4f3ee;
+  --surface: #ffffff;
+  --surface-2: #f1f0ea;
+  --surface-3: #e7e5dc;
+  --ink: #0c0d0b;
+  --text: #171814;
+  --muted: #74746b;
+  --faint: #a4a399;
+  --line: #e1dfd6;
+  --accent: #6fa300;        /* лайм для ліній і графіків */
+  --accent-soft: #ecf9b4;
+  --lime: #c8f135;          /* лайм для заливок (текст на ньому — чорний) */
+  --r-lg: 14px;
+  --r-md: 10px;
+  --r-sm: 8px;
+  --shadow: none;
+  --display: 'Barlow Condensed', 'Arial Narrow', Inter, sans-serif;
+}
+
+/* ---------- Типографіка ---------- */
+html[data-theme="gym"] h1,
+html[data-theme="gym"] h2,
+html[data-theme="gym"] h3,
+html[data-theme="gym"] .tab,
+html[data-theme="gym"] .brand,
+html[data-theme="gym"] .stat .value {
+  font-family: var(--display);
+}
+html[data-theme="gym"] h1 {
+  font-size: 46px; font-weight: 700; line-height: .95;
+  text-transform: uppercase; letter-spacing: .005em; margin-bottom: 24px;
+}
+html[data-theme="gym"] h2 {
+  font-size: 17px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+}
+html[data-theme="gym"] h3 {
+  font-size: 22px; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; line-height: 1.1;
+}
+
+/* ---------- Бічна панель ---------- */
+html[data-theme="gym"] .brand { font-size: 22px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+html[data-theme="gym"] .logo { border-radius: 5px; background: var(--ink); }
+html[data-theme="gym"] .logo::after { background: var(--lime); }
+html[data-theme="gym"] .tab {
+  font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border-radius: 6px; padding: 10px 12px; position: relative;
+}
+html[data-theme="gym"] .tab.on { background: var(--surface); box-shadow: none; }
+html[data-theme="gym"] .tab.on::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--lime);
+}
+html[data-theme="gym"] .side-foot { border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: none; }
+html[data-theme="gym"] .side-prog b { font-family: var(--display); font-size: 16px; text-transform: uppercase; letter-spacing: .02em; }
+
+/* ---------- Картки ---------- */
+html[data-theme="gym"] .card { border: 1px solid var(--line); box-shadow: none; padding: 22px 24px; }
+html[data-theme="gym"] .card.accent { background: var(--ink); border-color: var(--ink); }
+html[data-theme="gym"] .card.accent h3 { color: #fff; }
+html[data-theme="gym"] .card.accent .btn { background: var(--lime); border-color: var(--lime); color: var(--ink); }
+html[data-theme="gym"] .card.accent .btn:hover { background: #d6f85c; }
+html[data-theme="gym"] .empty { border-radius: var(--r-md); background: transparent; border: 1px dashed var(--line); }
+
+/* ---------- Цифри ---------- */
+html[data-theme="gym"] .stat .label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted);
+}
+html[data-theme="gym"] .stat .value {
+  font-size: 62px; font-weight: 600; line-height: .9; letter-spacing: -.01em; margin: 14px 0 6px;
+}
+html[data-theme="gym"] .stat .value small { font-family: Inter, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0; }
+html[data-theme="gym"] .dots i { height: 5px; border-radius: 1px; }
+html[data-theme="gym"] .dots i.on, html[data-theme="gym"] .dots i.on.now { background: var(--ink); }
+html[data-theme="gym"] .dots i.now { background: var(--faint); }
+
+/* ---------- Кнопки й мітки ---------- */
+html[data-theme="gym"] .btn { border-radius: var(--r-sm); font-weight: 600; letter-spacing: .01em; }
+html[data-theme="gym"] .btn.primary { background: var(--lime); border-color: var(--lime); color: var(--ink); }
+html[data-theme="gym"] .btn.primary:hover { background: #d6f85c; }
+html[data-theme="gym"] .btn.ghost { border-color: transparent; background: none; }
+html[data-theme="gym"] .pill { border-radius: 5px; font-weight: 500; }
+html[data-theme="gym"] .pill.accent { background: var(--lime); color: var(--ink); font-weight: 600; }
+html[data-theme="gym"] .ex-info .alts .pill { border: 1px solid var(--line); background: var(--surface); }
+
+/* ---------- Поля ---------- */
+html[data-theme="gym"] input[type=text],
+html[data-theme="gym"] input[type=number],
+html[data-theme="gym"] input[type=date],
+html[data-theme="gym"] select,
+html[data-theme="gym"] textarea { border-radius: var(--r-sm); border-color: var(--line); }
+html[data-theme="gym"] input:focus,
+html[data-theme="gym"] select:focus,
+html[data-theme="gym"] textarea:focus { border-color: var(--ink); }
+html[data-theme="gym"] label.field { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+
+/* ---------- Журнал підходів ---------- */
+html[data-theme="gym"] .sets th { letter-spacing: .1em; }
+html[data-theme="gym"] .sets input { border-radius: 6px; background: var(--surface-2); font-weight: 500; font-size: 16px; }
+html[data-theme="gym"] .sets tr.done input { background: var(--accent-soft); color: var(--ink); font-weight: 600; }
+html[data-theme="gym"] .check { border-radius: 6px; }
+html[data-theme="gym"] tr.done .check { background: var(--lime); border-color: var(--lime); color: var(--ink); }
+html[data-theme="gym"] .rest { border-radius: 12px; box-shadow: 0 6px 24px rgba(12, 13, 11, .16); }
+html[data-theme="gym"] .rest .time { font-family: var(--display); font-size: 28px; font-weight: 600; }
+html[data-theme="gym"] .rest.ring .time { color: var(--lime); }
+
+/* ---------- Програма ---------- */
+html[data-theme="gym"] .weeks { gap: 8px; }
+html[data-theme="gym"] .week-btn { border: 1px solid var(--line); box-shadow: none; border-radius: var(--r-md); }
+html[data-theme="gym"] .week-btn .num { font-family: var(--display); font-size: 13px; letter-spacing: .1em; }
+html[data-theme="gym"] .week-btn.on { background: var(--ink); border-color: var(--ink); }
+html[data-theme="gym"] .week-btn.on .num { color: var(--lime); }
+html[data-theme="gym"] .week-btn .dot-next, html[data-theme="gym"] .daytab .dot-next { background: var(--lime); box-shadow: 0 0 0 1px var(--ink); }
+html[data-theme="gym"] .daytabs { border-radius: var(--r-md); background: var(--surface-3); }
+html[data-theme="gym"] .daytab {
+  border-radius: 7px; font-family: var(--display); font-size: 16px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em;
+}
+html[data-theme="gym"] .daytab.on { background: var(--ink); color: #fff; }
+html[data-theme="gym"] .prog-list > li { border-top-color: var(--line); }
+html[data-theme="gym"] .prog-list > li::before { font-family: var(--display); font-size: 14px; border-radius: 5px; }
+html[data-theme="gym"] .prog-list > li.anchor { border-left: 3px solid var(--lime); }
+html[data-theme="gym"] .prog-list > li.open { background: var(--surface-2); border-radius: var(--r-md); }
+html[data-theme="gym"] .ex-row b { font-weight: 600; }
+html[data-theme="gym"] .ex-row:not([disabled]):hover b { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+html[data-theme="gym"] .ex-shots img { border-radius: 8px; }
+
+/* ---------- Графіки й таблиці ---------- */
+html[data-theme="gym"] .chart .line { stroke: var(--ink); stroke-width: 2.2; }
+html[data-theme="gym"] .chart .area { fill: rgba(200, 241, 53, .28); }
+html[data-theme="gym"] .chart .dot { stroke: var(--ink); fill: var(--lime); }
+html[data-theme="gym"] table.hist th { letter-spacing: .1em; }
+
+html[data-theme="gym"] .toast { border-radius: 8px; }
+html[data-theme="gym"] .thumb { border-radius: 8px; }
+
+/* ---------- Перемикач вигляду в профілі ---------- */
+.theme-pick { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 520px; }
+.theme-opt {
+  text-align: left; cursor: pointer; border: 2px solid var(--line); background: var(--surface);
+  border-radius: var(--r-md); padding: 10px; font: inherit; color: var(--text);
+}
+.theme-opt.on { border-color: var(--ink); }
+.theme-opt .sw { display: flex; height: 56px; border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+.theme-opt .sw i { flex: 1; }
+.theme-opt b { font-weight: 600; display: block; }
+.theme-opt span { font-size: 12px; color: var(--muted); }
+
+/* ---------- Телефон ---------- */
+@media (max-width: 900px) {
+  html[data-theme="gym"] h1 { font-size: 36px; }
+  html[data-theme="gym"] .tab { font-size: 11px; letter-spacing: .05em; padding: 7px 2px; }
+  html[data-theme="gym"] .tab.on { background: none; color: var(--ink); }
+  html[data-theme="gym"] .tab.on::before { left: 22%; right: 22%; top: -7px; bottom: auto; width: auto; height: 3px; }
+  html[data-theme="gym"] .stat .value { font-size: 46px; }
+  html[data-theme="gym"] .live-head h1 { font-size: 30px; }
+  html[data-theme="gym"] .daytab { font-size: 15px; }
+  html[data-theme="gym"] .card { padding: 16px; }
+}

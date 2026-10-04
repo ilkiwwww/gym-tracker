@@ -47,5 +47,6 @@ python3 serve.py
 - `styles.css` — стилі
 - `app.js` — логіка трекера
 - `program.js` — програма тренувань і довідник вправ
+- `theme-gym.css` — альтернативна тема «Gym» (перемикається в Профілі)
 - `serve.py` — локальний сервер без кешування
 - `sw.js`, `manifest.webmanifest`, `favicon.svg`, `assets/icons/` — PWA: офлайн-режим та іконки

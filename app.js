@@ -430,6 +430,8 @@
       </div>` : '<div class="section empty">Додай перший замір, щоб бачити динаміку</div>'}`;
   }
 
+  const currentTheme = () => document.documentElement.getAttribute('data-theme') || 'classic';
+
   let codeStage = false;
 
   function cloudCard() {
@@ -475,6 +477,23 @@
           <label class="field" style="grid-column:span 2">Ім’я<input type="text" value="${esc(p.name)}" data-profile="name"></label>
           <label class="field">Зріст, см<input type="text" inputmode="decimal" value="${esc(p.height)}" data-profile="height"></label>
           <label class="field">Цільова вага, кг<input type="text" inputmode="decimal" value="${esc(p.goal)}" data-profile="goal"></label>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Вигляд</h2>
+        <div class="card">
+          <div class="theme-pick">
+            <button class="theme-opt ${currentTheme() === 'classic' ? 'on' : ''}" data-act="theme" data-theme-id="classic">
+              <div class="sw"><i style="background:#f1f1f2"></i><i style="background:#ffffff"></i><i style="background:#111214"></i><i style="background:#ff5c28"></i></div>
+              <b>Класичний</b><span>М’який сірий, округлі картки</span>
+            </button>
+            <button class="theme-opt ${currentTheme() === 'gym' ? 'on' : ''}" data-act="theme" data-theme-id="gym">
+              <div class="sw"><i style="background:#f4f3ee"></i><i style="background:#ffffff"></i><i style="background:#0c0d0b"></i><i style="background:#c8f135"></i></div>
+              <b>Gym</b><span>Спортивний, лайм і чорний, щільна графіка</span>
+            </button>
+          </div>
+          <div class="muted small" style="margin-top:12px">Вигляд запам’ятовується окремо на кожному пристрої.</div>
         </div>
       </div>
 
@@ -681,6 +700,14 @@
         const open = u => window.open(u, '_blank', 'noopener');
         if (kind === 'cloud') Cloud.photoUrl(src).then(u => u && open(u));
         else open(src);
+        break;
+      }
+      case 'theme': {
+        const id = t.dataset.themeId;
+        if (id === 'classic') document.documentElement.removeAttribute('data-theme');
+        else document.documentElement.setAttribute('data-theme', id);
+        try { localStorage.setItem('gym-theme', id === 'classic' ? '' : id); } catch (e) { /* ignore */ }
+        render();
         break;
       }
       case 'cloud-in': {
