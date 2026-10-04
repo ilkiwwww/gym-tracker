@@ -97,5 +97,36 @@ window.Cloud = (() => {
     else { lastPulledAt = Date.now(); set('ready', 'Синхронізовано'); }
   }
 
-  return { init, signIn, signOut, pull, push, flush, onChange, state, enabled, get user() { return user; } };
+  // ---- Фото прогресу (приватне сховище Supabase) ----
+  const BUCKET = 'progress';
+  const urlCache = new Map();
+
+  async function uploadPhoto(blob) {
+    if (!sb || !user) return { ok: false, error: 'Спершу увійди в хмару' };
+    const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+    const { error } = await sb.storage.from(BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+    return error ? { ok: false, error: error.message } : { ok: true, path };
+  }
+
+  async function photoUrl(path) {
+    if (!sb || !user || !path) return null;
+    const hit = urlCache.get(path);
+    if (hit && hit.until > Date.now()) return hit.url;
+    const { data, error } = await sb.storage.from(BUCKET).createSignedUrl(path, 3600);
+    if (error || !data) return null;
+    urlCache.set(path, { url: data.signedUrl, until: Date.now() + 50 * 60 * 1000 });
+    return data.signedUrl;
+  }
+
+  async function removePhoto(path) {
+    if (!sb || !user || !path) return;
+    urlCache.delete(path);
+    await sb.storage.from(BUCKET).remove([path]);
+  }
+
+  return {
+    init, signIn, signOut, pull, push, flush, onChange, state, enabled,
+    uploadPhoto, photoUrl, removePhoto,
+    get user() { return user; },
+  };
 })();

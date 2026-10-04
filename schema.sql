@@ -31,3 +31,14 @@ drop policy if exists "власні дані: видалення" on public.trac
 create policy "власні дані: видалення"
   on public.tracker_state for delete
   using (auth.uid() = user_id);
+
+-- Сховище для фото прогресу: приватна корзина, доступ тільки до своєї теки.
+insert into storage.buckets (id, name, public)
+values ('progress', 'progress', false)
+on conflict (id) do nothing;
+
+drop policy if exists "власні фото" on storage.objects;
+create policy "власні фото"
+  on storage.objects for all
+  using (bucket_id = 'progress' and auth.uid()::text = (storage.foldername(name))[1])
+  with check (bucket_id = 'progress' and auth.uid()::text = (storage.foldername(name))[1]);

@@ -50,7 +50,6 @@
 
   const MEAS = [
     ['weight', 'Вага', 'кг'],
-    ['bodyFat', 'Жир', '%'],
     ['chest', 'Груди', 'см'],
     ['waist', 'Талія', 'см'],
     ['hips', 'Стегна', 'см'],
@@ -355,6 +354,7 @@
             </button>
             ${open && info ? `
             <div class="ex-info">
+              ${info.images && info.images.length ? `<div class="ex-shots">${info.images.map((src, i) => `<img src="${esc(src)}" alt="${esc(e.name)} — фаза ${i + 1}" loading="lazy">`).join('')}</div>` : ''}
               <div class="info-block"><div class="label">Цільові м’язи</div><div>${esc(info.muscles)}</div></div>
               ${info.how && info.how.length ? `<div class="info-block"><div class="label">Як робити</div><ol class="how">${info.how.map(h => `<li>${esc(h)}</li>`).join('')}</ol></div>` : ''}
               ${info.alts && info.alts.length ? `<div class="info-block"><div class="label">Чим замінити</div><div class="alts">${info.alts.map(a => `<span class="pill">${esc(a)}</span>`).join('')}</div></div>` : ''}
@@ -396,6 +396,14 @@
           <label class="field">Дата<input type="date" name="date" value="${today()}" required></label>
           ${MEAS.map(([k, label, unit]) => `<label class="field">${label}, ${unit}<input type="text" inputmode="decimal" name="${k}" placeholder="${last && last[k] != null ? fmtNum(last[k]) : ''}"></label>`).join('')}
           <label class="field" style="grid-column:1/-1">Нотатка<input type="text" name="note" placeholder="Напр.: зранку натще"></label>
+          <div class="field" style="grid-column:1/-1">
+            <span>Фото прогресу</span>
+            <div class="row">
+              <label class="btn sm">Вибрати фото<input type="file" accept="image/*" id="meas-photo" multiple hidden></label>
+              <span class="muted small" id="photo-count">не вибрано</span>
+            </div>
+            <div class="photo-pick" id="photo-pick"></div>
+          </div>
           <div style="grid-column:1/-1"><button class="btn primary" type="submit">Зберегти замір</button></div>
         </form>
       </div>
@@ -416,8 +424,8 @@
       <div class="section">
         <h2>Історія замірів</h2>
         <div class="card table-wrap"><table class="hist">
-          <thead><tr><th>Дата</th>${MEAS.map(([, l, u]) => `<th>${l}, ${u}</th>`).join('')}<th></th></tr></thead>
-          <tbody>${[...ms].reverse().map(m => `<tr><td>${fmtDate(m.date)}${m.note ? `<div class="muted small">${esc(m.note)}</div>` : ''}</td>${MEAS.map(([k]) => `<td>${fmtNum(m[k])}</td>`).join('')}<td><button class="icon-btn" title="Видалити" data-act="del-meas" data-id="${m.id}">${ICON.trash}</button></td></tr>`).join('')}</tbody>
+          <thead><tr><th>Дата</th>${MEAS.map(([, l, u]) => `<th>${l}, ${u}</th>`).join('')}<th>Фото</th><th></th></tr></thead>
+          <tbody>${[...ms].reverse().map(m => `<tr><td>${fmtDate(m.date)}${m.note ? `<div class="muted small">${esc(m.note)}</div>` : ''}</td>${MEAS.map(([k]) => `<td>${fmtNum(m[k])}</td>`).join('')}<td class="photo-cell">${(m.photos || []).map(ph => `<button class="thumb" data-act="photo-open" data-src="${esc(ph.path || ph.data || '')}" data-kind="${ph.path ? 'cloud' : 'local'}"><img alt="Фото ${fmtDate(m.date)}" ${ph.data ? `src="${esc(ph.data)}"` : `data-path="${esc(ph.path)}"`}></button>`).join('')}</td><td><button class="icon-btn" title="Видалити" data-act="del-meas" data-id="${m.id}">${ICON.trash}</button></td></tr>`).join('')}</tbody>
         </table></div>
       </div>` : '<div class="section empty">Додай перший замір, щоб бачити динаміку</div>'}`;
   }
@@ -488,6 +496,7 @@
     const views = { home: viewHome, program: viewProgram, stats: viewStats, body: viewBody, profile: viewProfile };
     app.innerHTML = (views[S.tab] || viewHome)();
     tick();
+    loadCloudThumbs();
   }
 
   // ---------- Active workout ----------
@@ -537,6 +546,51 @@
     S.active = null; restEnd = 0; minimized = false;
     save(); render(); scrollTo(0, 0);
     toast('Тренування збережено 💪');
+  }
+
+  // ---------- Фото прогресу ----------
+  let pickedPhotos = [];   // [{data, blob}]
+
+  // Стискаємо до 1280px по довшій стороні — якість зберігається, вага падає вдесятеро
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const max = 1280;
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * scale);
+        c.height = Math.round(img.height * scale);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob(blob => {
+          if (!blob) return reject(new Error('bad image'));
+          const r = new FileReader();
+          r.onload = () => resolve({ data: r.result, blob });
+          r.readAsDataURL(blob);
+        }, 'image/jpeg', 0.82);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+      img.src = url;
+    });
+  }
+
+  function renderPicked() {
+    const box = document.getElementById('photo-pick');
+    const cnt = document.getElementById('photo-count');
+    if (!box) return;
+    box.innerHTML = pickedPhotos.map((p, i) => `<div class="thumb"><img src="${p.data}" alt=""><button class="x" data-act="photo-drop" data-i="${i}" title="Прибрати">✕</button></div>`).join('');
+    if (cnt) cnt.textContent = pickedPhotos.length ? `${pickedPhotos.length} ${plural(pickedPhotos.length, 'фото', 'фото', 'фото')}` : 'не вибрано';
+  }
+
+  // Підставляємо підписані посилання на фото з хмари після рендера
+  function loadCloudThumbs() {
+    if (!window.Cloud || !Cloud.enabled() || !Cloud.user) return;
+    document.querySelectorAll('img[data-path]').forEach(async img => {
+      const url = await Cloud.photoUrl(img.dataset.path);
+      if (url) img.src = url;
+    });
   }
 
   // ---------- Timers ----------
@@ -609,6 +663,14 @@
       case 'rest': startRest(+t.dataset.sec); break;
       case 'del-workout': if (confirm('Видалити це тренування?')) { S.workouts = S.workouts.filter(w => w.id !== t.dataset.id); save(); render(); } break;
       case 'del-meas': if (confirm('Видалити цей замір?')) { S.measurements = S.measurements.filter(m => m.id !== t.dataset.id); save(); render(); } break;
+      case 'photo-drop': pickedPhotos.splice(+t.dataset.i, 1); renderPicked(); break;
+      case 'photo-open': {
+        const kind = t.dataset.kind, src = t.dataset.src;
+        const open = u => window.open(u, '_blank', 'noopener');
+        if (kind === 'cloud') Cloud.photoUrl(src).then(u => u && open(u));
+        else open(src);
+        break;
+      }
       case 'cloud-in': {
         const inp = document.getElementById('cloud-email');
         const email = (inp.value || '').trim();
@@ -649,6 +711,17 @@
     if (t.dataset.act === 'progress-ex') { progressEx = t.value; render(); }
     else if (t.dataset.act === 'body-metric') { bodyMetric = t.value; render(); }
     else if (t.dataset.act === 'active-date') { S.active.date = t.value || today(); save(); }
+    else if (t.id === 'meas-photo' && t.files.length) {
+      const files = [...t.files].slice(0, 6);
+      t.value = '';
+      Promise.all(files.map(f => compressImage(f).catch(() => null)))
+        .then(list => {
+          const ok = list.filter(Boolean);
+          if (ok.length < files.length) toast('Деякі файли не вдалося прочитати');
+          pickedPhotos = pickedPhotos.concat(ok).slice(0, 6);
+          renderPicked();
+        });
+    }
     else if (t.id === 'import' && t.files[0]) {
       const r = new FileReader();
       r.onload = () => {
@@ -672,9 +745,31 @@
     const m = { id: uid(), date: f.get('date') || today(), note: String(f.get('note') || '').trim() };
     let any = false;
     for (const [k] of MEAS) { const v = num(f.get(k)); m[k] = v; if (v != null) any = true; }
-    if (!any) { toast('Введи хоча б один показник'); return; }
+    if (!any && !pickedPhotos.length) { toast('Введи показник або додай фото'); return; }
+
+    const photos = pickedPhotos;
+    pickedPhotos = [];
+    m.photos = [];
     S.measurements.push(m);
-    save(); render(); toast('Замір збережено');
+    save(); render();
+
+    if (!photos.length) { toast('Замір збережено'); return; }
+
+    const cloudOn = window.Cloud && Cloud.enabled() && Cloud.user;
+    if (!cloudOn) {
+      // без хмари фото лишаються в браузері
+      m.photos = photos.map(p => ({ data: p.data }));
+      save(); render(); toast('Замір і фото збережено в браузері');
+      return;
+    }
+    toast('Завантажую фото…');
+    Promise.all(photos.map(p => Cloud.uploadPhoto(p.blob)))
+      .then(res => {
+        m.photos = res.filter(r => r.ok).map(r => ({ path: r.path }));
+        const failed = res.length - m.photos.length;
+        save(); render();
+        toast(failed ? `Фото завантажено: ${m.photos.length} з ${res.length}` : 'Замір і фото збережено');
+      });
   });
 
   // Застосувати стан із хмари (лишаємо поточну вкладку та активне тренування локальними)

@@ -350,3 +350,26 @@ table.hist th { font-size: 11px; color: var(--faint); font-weight: 600; text-tra
   .card { padding: 14px; }
   h1 { font-size: 22px; }
 }
+
+/* ---------- Фото прогресу ---------- */
+.photo-pick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.photo-pick:empty { display: none; }
+.thumb { position: relative; width: 64px; height: 84px; border: 0; padding: 0; border-radius: 10px; overflow: hidden; background: var(--surface-2); cursor: pointer; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb .x {
+  position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border: 0; border-radius: 50%;
+  background: rgba(17, 18, 20, .7); color: #fff; font-size: 11px; line-height: 1; cursor: pointer;
+}
+.photo-cell { white-space: nowrap; }
+.photo-cell .thumb { width: 36px; height: 48px; margin-left: 4px; vertical-align: middle; }
+.photo-cell .thumb:hover { outline: 2px solid var(--accent); }
+
+/* ---------- Фото вправи ---------- */
+.ex-shots { display: flex; gap: 8px; }
+.ex-shots img {
+  width: 150px; height: 112px; object-fit: cover; object-position: center;
+  border-radius: var(--r-sm); background: var(--surface); display: block;
+}
+@media (max-width: 900px) {
+  .ex-shots img { width: calc(50% - 4px); height: auto; aspect-ratio: 4 / 3; }
+}
