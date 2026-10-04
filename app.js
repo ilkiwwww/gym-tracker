@@ -280,8 +280,8 @@
             <table class="sets"><thead><tr><th>#</th><th>Вага, кг</th><th>Повтори</th><th></th></tr></thead><tbody>
             ${e.sets.map((s, si) => `<tr class="${s.done ? 'done' : ''}">
               <td>${si + 1}</td>
-              <td><input type="text" inputmode="decimal" value="${esc(s.w)}" placeholder="${esc(prev?.sets[si]?.w ?? '0')}" data-set="w" data-e="${ei}" data-s="${si}"></td>
-              <td><input type="text" inputmode="numeric" value="${esc(s.r)}" placeholder="${esc(prev?.sets[si]?.r ?? e.reps ?? '0')}" data-set="r" data-e="${ei}" data-s="${si}"></td>
+              <td><input type="text" inputmode="decimal" value="${esc(s.w)}" placeholder="${esc(prev?.sets[si]?.w ?? '')}" data-set="w" data-e="${ei}" data-s="${si}"></td>
+              <td><input type="text" inputmode="numeric" value="${esc(s.r)}" placeholder="${esc(prev?.sets[si]?.r ?? e.reps ?? '')}" data-set="r" data-e="${ei}" data-s="${si}"></td>
               <td style="width:46px"><button class="check" title="Підхід виконано" data-act="done" data-e="${ei}" data-s="${si}">${ICON.check}</button></td>
             </tr>`).join('')}
             </tbody></table>
@@ -464,17 +464,6 @@
       </div>
 
       <div class="section">
-        <h2>Демо-дані</h2>
-        <div class="card">
-          <p class="muted small" style="margin-top:0">Заповнює трекер вигаданими тренуваннями й замірами за 6 тижнів, щоб подивитися, як виглядають графіки та історія. Це не твої результати — перед справжнім стартом натисни «Стерти демо».</p>
-          <div class="row">
-            <button class="btn" data-act="demo">Заповнити демо-даними</button>
-            <button class="btn ghost" data-act="wipe">Стерти демо</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
         <h2>Дані</h2>
         <div class="card">
           <p class="muted small" style="margin-top:0">Усе зберігається лише в цьому браузері. Регулярно роби резервну копію, а щоб перенести дані на інший пристрій, імпортуй файл там.</p>
@@ -548,84 +537,6 @@
     S.active = null; restEnd = 0; minimized = false;
     save(); render(); scrollTo(0, 0);
     toast('Тренування збережено 💪');
-  }
-
-  // ---------- Демо-дані ----------
-  function loadDemo() {
-    const days = PROGRAM.days;
-    if (!days.length) return;
-    // стартові робочі ваги для кожної вправи
-    const base = {
-      'Жим штанги лежачи': 45, 'Присідання зі штангою': 70, 'Станова тяга': 85, 'Тяга штанги в нахилі': 50,
-      'Жим ногами': 110, 'Румунська тяга зі штангою': 55, 'Тяга тазом зі штангою': 70, 'Присід у Смітті': 55,
-      'Жим штанги стоячи': 30, 'Жим гантелей стоячи': 14, 'Жим гантелей на похилій лаві': 18,
-      'Тяга нижнього блоку сидячи': 45, 'Тяга верхнього блоку широким хватом': 50, 'Підтягування з обтяженням': 5,
-      'Віджимання на брусах': 5, 'Болгарські випади': 16, 'Випади з гантелями в ходьбі': 14,
-      'Згинання ніг лежачи': 35, 'Розгинання ніг': 40, 'Розгинання ніг у тренажері': 40,
-      'Підйоми на носки стоячи': 60, 'Підйоми на носки сидячи': 40, 'Face pull на блоці': 20,
-      'Розгинання рук на блоці': 25, 'Французький жим лежачи': 20, 'Молоткові згинання': 12,
-      'Згинання рук з EZ-грифом': 20, 'Розведення гантелей стоячи': 8,
-    };
-
-    const step = w => w >= 40 ? 2.5 : w >= 10 ? 2 : 1;
-    const repsOf = r => { const m = String(r).match(/(\d+)(?:\D+(\d+))?/); return m ? [+m[1], +(m[2] || m[1])] : [10, 10]; };
-
-    const workouts = [];
-    const start = new Date(today() + 'T00:00');
-    start.setDate(start.getDate() - 37);
-    let di = 0;
-    for (let week = 0; week < 6; week++) {
-      for (const offset of [0, 1, 3, 4]) {              // Пн, Вт, Чт, Пт
-        if (week === 5 && offset > 1) continue;          // поточний тиждень ще не завершено
-        const dt = new Date(start);
-        dt.setDate(start.getDate() + week * 7 + offset);
-        dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
-        const date = dt.toISOString().slice(0, 10);
-        if (date > today()) continue;
-        const day = days[di % days.length]; di++;
-        workouts.push({
-          id: uid(), date, startedAt: +dt + 18 * 36e5, dayId: day.id, dayName: day.name,
-          durationMin: 52 + ((week + di) % 4) * 4,
-          note: week === 2 && offset === 0 ? 'Легше спалося, присід пішов добре' : '',
-          exercises: day.exercises.map(e => {
-            const w0 = base[e.name] ?? 10;
-            const [lo, hi] = repsOf(e.reps);
-            const w = w0 ? Math.round((w0 + step(w0) * week) * 2) / 2 : 0;
-            return {
-              name: e.name,
-              sets: Array.from({ length: e.sets }, (_, i) => ({
-                w,
-                r: Math.max(lo, hi - (i > 1 ? 1 : 0) - (week % 2 === 0 ? 1 : 0)),
-              })),
-            };
-          }),
-        });
-      }
-    }
-
-    const meas = [];
-    for (let week = 0; week <= 6; week++) {
-      const dt = new Date(start);
-      dt.setDate(start.getDate() + week * 7);
-      dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
-      const date = dt.toISOString().slice(0, 10);
-      if (date > today()) continue;
-      meas.push({
-        id: uid(), date, note: week === 0 ? 'Старт' : '',
-        weight: Math.round((68 - week * 0.55 + (week % 2 ? 0.2 : -0.1)) * 10) / 10,
-        bodyFat: Math.round((28 - week * 0.4) * 10) / 10,
-        chest: Math.round((92 - week * 0.2) * 10) / 10,
-        waist: Math.round((74 - week * 0.5) * 10) / 10,
-        hips: Math.round((99 - week * 0.35) * 10) / 10,
-        arm: Math.round((28 + week * 0.1) * 10) / 10,
-        thigh: Math.round((57 - week * 0.15) * 10) / 10,
-      });
-    }
-
-    S.workouts = workouts;
-    S.measurements = meas;
-    S.profile = Object.assign({ name: '', height: '168', goal: '62' }, S.profile.height ? S.profile : {});
-    S.active = null;
   }
 
   // ---------- Timers ----------
@@ -714,12 +625,6 @@
       case 'cloud-pull':
         Cloud.pull(applyRemote).then(d => { toast(d ? 'Дані завантажено з хмари' : 'У хмарі поки порожньо'); render(); });
         break;
-      case 'demo': {
-        if ((S.workouts.length || S.measurements.length) && !confirm('Замінити поточні записи демо-даними?')) break;
-        loadDemo(); save(); S.tab = 'stats'; render(); scrollTo(0, 0);
-        toast('Демо-дані завантажено');
-        break;
-      }
       case 'export': {
         const { tab, program, ...data } = S;
         const blob = new Blob([JSON.stringify({ app: 'gym-tracker', version: 1, exportedAt: new Date().toISOString(), ...data }, null, 2)], { type: 'application/json' });
