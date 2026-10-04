@@ -107,7 +107,10 @@
   }
 
   let S = load();
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('Не вдалося зберегти дані'); } };
+  const save = () => {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('Не вдалося зберегти дані'); }
+    if (window.Cloud && Cloud.enabled()) Cloud.push(() => { const { tab, ...rest } = S; return rest; });
+  };
 
   // ---------- Derived ----------
   const measSorted = () => [...S.measurements].sort((a, b) => a.date.localeCompare(b.date));
@@ -419,6 +422,30 @@
       </div>` : '<div class="section empty">Додай перший замір, щоб бачити динаміку</div>'}`;
   }
 
+  function cloudCard() {
+    const c = window.Cloud ? Cloud.state() : { enabled: false };
+    if (!c.enabled) {
+      return `<p class="muted small" style="margin:0">Хмара ще не підключена. Дані зберігаються лише в цьому браузері.</p>`;
+    }
+    if (c.status === 'loading') return '<p class="muted small" style="margin:0">Підключення до хмари…</p>';
+    if (c.email) {
+      return `
+        <div class="row">
+          <div class="body"><b>${esc(c.email)}</b><div class="muted small">${esc(c.message || 'Синхронізовано')}</div></div>
+          <span class="spacer"></span>
+          <button class="btn sm" data-act="cloud-pull">Завантажити з хмари</button>
+          <button class="btn ghost sm" data-act="cloud-out">Вийти</button>
+        </div>`;
+    }
+    return `
+      <p class="muted small" style="margin:0 0 12px">Увійди — і тренування та заміри зберігатимуться в хмарі й будуть доступні з будь-якого пристрою. Пароль не потрібен: надішлемо посилання на пошту.</p>
+      <div class="row">
+        <input type="text" id="cloud-email" placeholder="твоя пошта" style="flex:1;max-width:320px" value="${esc(S.profile.email || '')}">
+        <button class="btn primary" data-act="cloud-in">Надіслати посилання</button>
+      </div>
+      ${c.status === 'error' ? `<div class="muted small" style="margin-top:10px">${esc(c.message)}</div>` : ''}`;
+  }
+
   function viewProfile() {
     const p = S.profile;
     return `
@@ -429,6 +456,11 @@
           <label class="field">Зріст, см<input type="text" inputmode="decimal" value="${esc(p.height)}" data-profile="height"></label>
           <label class="field">Цільова вага, кг<input type="text" inputmode="decimal" value="${esc(p.goal)}" data-profile="goal"></label>
         </div>
+      </div>
+
+      <div class="section">
+        <h2>Хмарне збереження</h2>
+        <div class="card" id="cloud-card">${cloudCard()}</div>
       </div>
 
       <div class="section">
@@ -666,6 +698,22 @@
       case 'rest': startRest(+t.dataset.sec); break;
       case 'del-workout': if (confirm('Видалити це тренування?')) { S.workouts = S.workouts.filter(w => w.id !== t.dataset.id); save(); render(); } break;
       case 'del-meas': if (confirm('Видалити цей замір?')) { S.measurements = S.measurements.filter(m => m.id !== t.dataset.id); save(); render(); } break;
+      case 'cloud-in': {
+        const inp = document.getElementById('cloud-email');
+        const email = (inp.value || '').trim();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('Схоже, у пошті помилка'); inp.focus(); break; }
+        S.profile.email = email; save();
+        t.disabled = true; t.textContent = 'Надсилаю…';
+        Cloud.signIn(email).then(r => {
+          render();
+          toast(r.ok ? 'Лист надіслано — відкрий посилання з пошти' : 'Не вдалося надіслати лист');
+        });
+        break;
+      }
+      case 'cloud-out': Cloud.signOut().then(render); break;
+      case 'cloud-pull':
+        Cloud.pull(applyRemote).then(d => { toast(d ? 'Дані завантажено з хмари' : 'У хмарі поки порожньо'); render(); });
+        break;
       case 'demo': {
         if ((S.workouts.length || S.measurements.length) && !confirm('Замінити поточні записи демо-даними?')) break;
         loadDemo(); save(); S.tab = 'stats'; render(); scrollTo(0, 0);
@@ -724,5 +772,27 @@
     save(); render(); toast('Замір збережено');
   });
 
+  // Застосувати стан із хмари (лишаємо поточну вкладку та активне тренування локальними)
+  function applyRemote(remote) {
+    if (!remote || typeof remote !== 'object') return;
+    const tab = S.tab;
+    S = Object.assign(fresh(), remote, { tab });
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* ignore */ }
+    render();
+  }
+
   render();
+
+  if (window.Cloud && Cloud.enabled()) {
+    Cloud.onChange(() => {
+      const card = document.getElementById('cloud-card');
+      if (card) card.innerHTML = cloudCard();
+    });
+    Cloud.init(applyRemote).then(() => {
+      // якщо в хмарі порожньо, а локально вже є записи — заливаємо їх
+      if (Cloud.user && (S.workouts.length || S.measurements.length)) {
+        Cloud.flush(() => { const { tab, ...rest } = S; return rest; });
+      }
+    });
+  }
 })();
