@@ -23,7 +23,6 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
-  min-width: 1060px;
   background: var(--bg);
   color: var(--text);
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -263,3 +262,91 @@ table.hist th { font-size: 11px; color: var(--faint); font-weight: 600; text-tra
 
 .close-live { width: 38px; height: 38px; padding: 0; display: grid; place-items: center; font-size: 15px; color: var(--muted); }
 .close-live:hover { color: var(--text); }
+
+
+/* ---------- Планшет і телефон ---------- */
+@media (max-width: 900px) {
+  :root { --r-lg: 20px; --r-md: 14px; }
+
+  /* бічна панель стає нижньою навігацією */
+  .sidebar {
+    position: fixed; inset: auto 0 0 0; width: auto; z-index: 20;
+    flex-direction: row; gap: 0; padding: 0;
+    background: var(--surface); border-top: 1px solid var(--line);
+  }
+  .brand, .side-foot { display: none; }
+  .tabs { flex-direction: row; width: 100%; gap: 0; padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+  .tab {
+    flex: 1; flex-direction: column; gap: 3px; justify-content: center;
+    padding: 7px 2px; font-size: 10.5px; font-weight: 500; text-align: center; border-radius: 10px;
+  }
+  .tab svg { width: 21px; height: 21px; }
+  .tab.on { background: none; color: var(--accent); box-shadow: none; font-weight: 600; }
+
+  main {
+    margin-left: 0; max-width: none;
+    padding: 20px 16px calc(84px + env(safe-area-inset-bottom));
+  }
+
+  h1 { font-size: 24px; margin-bottom: 18px; }
+  .section { margin-top: 24px; }
+  .card { padding: 16px; }
+
+  /* статистика та форми у дві колонки */
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stat .value { font-size: 30px; margin: 8px 0 2px; }
+  .form-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .form-grid > div[style*="1/-1"], .form-grid > label[style*="1/-1"] { grid-column: 1 / -1; }
+
+  /* тижні програми: 2×2 */
+  .weeks { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .week-btn { padding: 11px 13px; font-size: 13px; }
+
+  /* дні програми гортаються вбік */
+  .daytabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .daytabs::-webkit-scrollbar { display: none; }
+  .daytab { flex: 0 0 auto; font-size: 13px; padding: 9px 14px; }
+
+  /* список вправ: назва зверху, параметри знизу */
+  .prog-list > li { padding: 12px 0 12px 32px; }
+  .prog-list .row { flex-wrap: wrap; gap: 6px; }
+  .prog-list .row .spacer { display: none; }
+  .ex-row b { display: block; width: 100%; }
+  .chev { margin-left: auto; }
+
+  /* журнал підходів */
+  .live-head { gap: 8px; }
+  .live-head h1 { font-size: 21px; width: 100%; order: 3; }
+  .live-head .spacer { display: none; }
+  .ex-card .ex-top h3 { font-size: 15px; }
+  .sets th { font-size: 10px; }
+  .sets td { padding: 3px 3px; }
+  .sets td:first-child { width: 18px; font-size: 12px; }
+  .sets input { padding: 11px 4px; font-size: 16px; }   /* 16px — щоб iOS не зумив поле */
+  .check { width: 42px; height: 42px; }
+  .close-live { width: 42px; height: 42px; }
+
+  /* таймер відпочинку над нижньою навігацією */
+  .rest {
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    padding: 8px 8px 8px 16px; gap: 5px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+  }
+  .rest::-webkit-scrollbar { display: none; }
+  .rest .label { display: none; }
+  .rest .time { font-size: 18px; min-width: 50px; }
+  .rest .btn { padding: 7px 11px; font-size: 13px; }
+
+  .toast { bottom: calc(88px + env(safe-area-inset-bottom)); width: max-content; max-width: calc(100vw - 32px); }
+
+  table.hist th, table.hist td { padding: 9px 6px; }
+  .ex-info .alts .pill { font-size: 12px; }
+}
+
+@media (max-width: 420px) {
+  .stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat .value { font-size: 26px; }
+  .form-grid { grid-template-columns: 1fr 1fr; }
+  .weeks { grid-template-columns: 1fr; }
+  .card { padding: 14px; }
+  h1 { font-size: 22px; }
+}
