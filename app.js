@@ -430,6 +430,8 @@
       </div>` : '<div class="section empty">Додай перший замір, щоб бачити динаміку</div>'}`;
   }
 
+  let codeStage = false;
+
   function cloudCard() {
     const c = window.Cloud ? Cloud.state() : { enabled: false };
     if (!c.enabled) {
@@ -444,6 +446,16 @@
           <button class="btn sm" data-act="cloud-pull">Завантажити з хмари</button>
           <button class="btn ghost sm" data-act="cloud-out">Вийти</button>
         </div>`;
+    }
+    if (codeStage) {
+      return `
+        <p class="muted small" style="margin:0 0 12px">Лист надіслано на <b>${esc(S.profile.email || '')}</b>. Натисни посилання в листі або введи код із нього тут — так зручніше в застосунку на телефоні.</p>
+        <div class="row">
+          <input type="text" id="cloud-code" inputmode="numeric" autocomplete="one-time-code" placeholder="код із листа" style="flex:1;max-width:220px;letter-spacing:.2em">
+          <button class="btn primary" data-act="cloud-code">Підтвердити</button>
+          <button class="btn ghost sm" data-act="cloud-back">Інша пошта</button>
+        </div>
+        ${c.status === 'error' ? `<div class="muted small" style="margin-top:10px">${esc(c.message)}</div>` : ''}`;
     }
     return `
       <p class="muted small" style="margin:0 0 12px">Увійди — і тренування та заміри зберігатимуться в хмарі й будуть доступні з будь-якого пристрою. Пароль не потрібен: надішлемо посилання на пошту.</p>
@@ -678,11 +690,25 @@
         S.profile.email = email; save();
         t.disabled = true; t.textContent = 'Надсилаю…';
         Cloud.signIn(email).then(r => {
+          if (r.ok) codeStage = true;
           render();
-          toast(r.ok ? 'Лист надіслано — відкрий посилання з пошти' : 'Не вдалося надіслати лист');
+          toast(r.ok ? 'Лист надіслано' : 'Не вдалося надіслати лист');
         });
         break;
       }
+      case 'cloud-code': {
+        const inp = document.getElementById('cloud-code');
+        const code = (inp.value || '').trim();
+        if (!/^\d{6,10}$/.test(code)) { toast('Код складається з цифр'); inp.focus(); break; }
+        t.disabled = true; t.textContent = 'Перевіряю…';
+        Cloud.verifyCode(S.profile.email, code).then(r => {
+          if (r.ok) { codeStage = false; toast('Вхід виконано'); }
+          else { toast('Код невірний або застарів'); }
+          render();
+        });
+        break;
+      }
+      case 'cloud-back': codeStage = false; render(); break;
       case 'cloud-out': Cloud.signOut().then(render); break;
       case 'cloud-pull':
         Cloud.pull(applyRemote).then(d => { toast(d ? 'Дані завантажено з хмари' : 'У хмарі поки порожньо'); render(); });

@@ -60,6 +60,14 @@ window.Cloud = (() => {
     return error ? { ok: false, error: error.message } : { ok: true };
   }
 
+  // Вхід за кодом із листа — для застосунку на головному екрані iPhone,
+  // де посилання з пошти відкривається в Safari, а не в самому застосунку.
+  async function verifyCode(email, code) {
+    if (!sb) return { ok: false, error: 'Хмара не налаштована' };
+    const { error } = await sb.auth.verifyOtp({ email, token: String(code).trim(), type: 'email' });
+    return error ? { ok: false, error: error.message } : { ok: true };
+  }
+
   async function signOut() {
     if (sb) await sb.auth.signOut();
     user = null;
@@ -125,7 +133,7 @@ window.Cloud = (() => {
   }
 
   return {
-    init, signIn, signOut, pull, push, flush, onChange, state, enabled,
+    init, signIn, verifyCode, signOut, pull, push, flush, onChange, state, enabled,
     uploadPhoto, photoUrl, removePhoto,
     get user() { return user; },
   };
